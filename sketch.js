@@ -1,12 +1,9 @@
 
-
-var camera, scene, renderer, mouse, raycaster, controls, selectedPice = null,board,cube;
+var camera, scene, renderer, mouse, raycaster, controls, selectedPice = null,wayGroup,cube,parkGroup;
 
 function init() {
     ///
     ///implement your functionality here in this fill please 
-
-
 
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -17,10 +14,11 @@ function init() {
 
     scene.background = new THREE.Color(0x1e555c);
 
-    var geometry = new THREE.BoxGeometry(1, 0.1, 1);
+    var geometry = new THREE.BoxGeometry(1, 0.1, 1);  
     var parkBoxMaterial = new THREE.MeshStandardMaterial({ color: 0xeba570, wireframe: false })
     var wayBoxMaterial = new THREE.MeshStandardMaterial({ color: 0xedb183, wireframe: false })
     //var cube = new THREE.Mesh(geometry,material);
+    /////////////////
 
     var cylGeometry = new THREE.CylinderGeometry(0.3, 0.4, 0.3, 100, 1, false, 400, 32);
     var material = new THREE.MeshStandardMaterial({ color: 0xf15152 });
@@ -41,8 +39,9 @@ function init() {
     light.position.set(4, 10, 4);
     
     scene.add(light);
-    board = new THREE.Group();
-
+    ///////////////
+    wayGroup = new THREE.Group();
+    parkGroup = new THREE.Group();
     let squareNumber = 1;
     for (let x = 0; x < 9; x++) {
         for (let z = 0; z < 9; z++) {
@@ -52,37 +51,37 @@ function init() {
                 cube.position.set(x, 0, z);
                 cube.userData.squareNumber = squareNumber;
                 squareNumber++;
-                board.add(cube);
+                parkGroup.add(cube);
             }
             else if (((x == 1 || x == 2 || x == 3 || x == 5 || x == 6 || x == 7) && (z % 4 == 0)) || ((z == 1 || z == 2 || z == 3 || z == 5 || z == 6 || z == 7) && (x % 4 == 0))) {
                 cube = new THREE.Mesh(geometry, wayBoxMaterial);
                 cube.position.set(x, 0, z);
                 cube.userData.squareNumber = squareNumber;
                 squareNumber++;
-                board.add(cube);
+                wayGroup.add(cube);
             }
             else continue;
-
         }
     }
     console.log(squareNumber);
-    
+    scene.add(wayGroup);
+    scene.add(parkGroup);
+
     camera.position.z = 10;
-    camera.position.y = 3;
+    camera.position.x = 4;
+    camera.position.y = 4;
     
     ////controls 
     controls = new THREE.OrbitControls(camera, renderer.domElement);
-    scene.add(board);
+    
     controls.target.set(4, 0, 4);
     controls.enableDamping = true;
     controls.enablePan = false;
-    controls.maxPolarAngle = Math.PI / 2;
+    controls.maxPolarAngle = Math.PI / 3;
     ////controls 
     mouse = new THREE.Vector2();
     raycaster = new THREE.Raycaster();
-    mouse.x = null;
-    mouse.y = null;
-    raycaster.far = 15;  
+    raycaster.far = 15;
     window.requestAnimationFrame(GameLoop);
 }
 
@@ -95,7 +94,7 @@ function GameLoop() {
     window.requestAnimationFrame(GameLoop);
 }
 function positionForSquare(square){
-    const found = board.children.find((child) => child.userData.squareNumber == square);
+    const found = parkGroup.children.find((child) => child.userData.squareNumber == square);
     if(found){
         return found.position;
     }
@@ -114,36 +113,35 @@ function onMouseMove(event) {
 
     // calculate mouse position in normalized device coordinates
     // (-1 to +1) for both components
-
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
     //  console.log("hi i'm hereeeeeeee");
 }   
 
 function onClick(event){
-    console.log("hellooooooooo");
+    //console.log("hellooooooooo");
     raycaster.setFromCamera(mouse, camera);
     let intersects = raycaster.intersectObjects(scene.children);
+
     if(intersects.length > 0){
         selectedPice = intersects[0].object.userData.cylinderNumber;
-        console.log("hello child number : ");
+        //console.log("hello child number : ");
         return;
     }
 
     if(selectedPice > 0){
         raycaster.setFromCamera(mouse,camera);
-        intersects = raycaster.intersectObjects(board.children);
-        console.log("helloooooooooooooooooooooo"+intersects.length);
+        intersects = raycaster.intersectObjects(parkGroup.children);
+        //console.log("helloooooooooooooooooooooo"+intersects.length);
 
         if(intersects.length > 0){
-
             const targatSquare = intersects[0].object.userData.squareNumber;
-            console.log("hellooooYYYYYYYYYYYYYYYY"+targatSquare);
             const selectedObject = scene.children.find((child) => child.userData.cylinderNumber == selectedPice);
             if(!targatSquare || !selectedObject) return;
             const targatPosition = positionForSquare(targatSquare);
-            selectedObject.position.set(targatPosition.x,selectedObject.position.y, targatPosition.z);
-            
+            if( ((selectedObject.position.x+selectedObject.position.z-4) == (targatPosition.x+targatPosition.z)) || ((selectedObject.position.x+selectedObject.position.z+4) == (targatPosition.x+targatPosition.z)) )
+                selectedObject.position.set(targatPosition.x,selectedObject.position.y, targatPosition.z);
+            else console.log("hiisss");
             selectedPice = null;
         }
     }
@@ -175,4 +173,3 @@ window.addEventListener("resize", onWindowResize);
 window.addEventListener('mousemove', onMouseMove, false);
 window.addEventListener("click",onClick);
 window.onload = init;
-
