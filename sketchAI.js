@@ -2,7 +2,7 @@
 var camera, scene, renderer, mouse, raycaster, controls, selectedPice = null, wayGroup, cube, parkGroup, standGroup1, standGroup2;
 var numPiscesOnstands = 6, currentPlayer = 1, remianOnStand = true;
 var cylindersGroup1 = [], cylindersGroup2 = [];
-
+var playWithAI = true, numOfCylOnStandForAI = 2;
 function init() {
 
     ///implement your functionality here in this fill please 
@@ -22,7 +22,7 @@ function init() {
     //var cube = new THREE.Mesh(geometry,material);
     /////////////////
 
-    var cylGeometry = new THREE.CylinderGeometry(0.3, 0.4, 0.3, 100, 1, false, 400, 6.3);
+    var cylGeometry = new THREE.CylinderGeometry(0.3, 0.4, 0.3, 100, 1, false, 400, 32);
 
     //var cylinder = new THREE.Mesh(cylGeometry, material);
     //cylinder.position.set(8, 0.1, 4);
@@ -80,7 +80,7 @@ function init() {
             cylinderNumber++;
         }
     }
-    // console.log("")
+    console.log("")
     scene.add(standGroup1);
     scene.add(standGroup2)
 
@@ -136,7 +136,12 @@ function GameLoop() {
     hoverPices();
     renderer.render(scene, camera);
     window.requestAnimationFrame(GameLoop);
-
+    if (playWithAI) {
+        if (currentPlayer == 1) {
+            AIMove();
+        }
+    }
+    console.log(playWithAI);
 }
 function positionForSquare(square) {
     const found = parkGroup.children.find((child) => child.userData.squareNumber == square);
@@ -212,11 +217,11 @@ function onClick(event) {
                     isplayer1Win = checkIfWin(cylindersGroup1)
                     isplayer2Win = checkIfWin(cylindersGroup2)
                     if (isplayer1Win) {
-                        window.alert("Red player win")
+                        window.alert("player 1 wins ")
                         location.reload();
                     }
                     else if (isplayer2Win) {
-                        window.alert("Black player win")
+                        window.alert("player 2 wins ")
                         location.reload();
                     }
                 }
@@ -233,11 +238,11 @@ function onClick(event) {
                 isplayer1Win = checkIfWin(cylindersGroup1);
                 isplayer2Win = checkIfWin(cylindersGroup2);
                 if (isplayer1Win) {
-                    window.alert("Red player win")
+                    window.alert("player 1 wins")
                     location.reload();
                 }
                 else if (isplayer2Win) {
-                    window.alert("Black player win")
+                    window.alert("player 2 wins ")
                     location.reload();
                 }
             }
@@ -287,7 +292,132 @@ function checkIfWin(cylinderGroup) {
 
     return (isWinX || isWinZ);
 }
+function isItAi(isItAi) {
+    playWithAI = isItAi;
+}
 
+function AIMove() {
+
+    let node = [];
+    let clonedParkGroup = parkGroup.clone();
+    let clonedCylindersGroup1 = cylindersGroup1.slice(0);           ///cloning array 
+    let clonedCylindersGroup2 = cylindersGroup2.slice(0);
+    //console.log("x : " + clonedCylindersGroup2[1].position.x);
+    clonedCylindersGroup1[0].position.x--;
+    node.push(clonedParkGroup);
+    node.push(clonedCylindersGroup1);
+    node.push(clonedCylindersGroup2);
+    let bestMove = alpahBeta(node, 8, Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY, true);
+    console.log("Xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx    ");
+
+    // console.log("X" + targatSquare.position.x);
+    // console.log("Z" + targatSquare.position.z);
+    // console.log("y" + targatSquare.position.y);
+
+    // cylindersGroup1[numOfCylOnStandForAI].position.x = targatSquare.position.x;
+    // cylindersGroup1[numOfCylOnStandForAI].position.z = targatSquare.position.z;
+    // cylindersGroup1[numOfCylOnStandForAI].position.y = targatSquare.position.y + 0.1;
+
+    // targatSquare.userData.busy = true;
+    currentPlayer = 2;
+
+
+    // if (checkIfWin(cylindersGroup1)) {
+    //     window.alert('AI wins you');
+    //     location.reload();
+
+    // }
+    // else if (checkIfWin(cylindersGroup12)) {
+    //     window.alert('you win');
+    //     location.reload();
+
+    // }
+
+}
+// node = array of busy and not busy squares 
+//       ,cylinders {cylindersGroup1, cylindersGroup2}
+function getNextStates(node, maximizingPlayer) {
+    let childrenNodes = [];
+    let currentParkGroup = node[0];
+    let cylsG1CurrentState = node[1];
+    let cylsG2CurrentState = node[2];
+    cylsG1CurrentState[1].position.x = currentParkGroup.children[4].position.x
+    cylsG1CurrentState[1].position.z = currentParkGroup.children[4].position.z
+    cylsG1CurrentState[1].position.y = currentParkGroup.children[4].position.y + 0.1;
+    currentParkGroup.children[4].userData.busy = true ; 
+    console.log("is it busy" +currentParkGroup.children[4].userData.busy);
+    console.log("is it busy acual" +parkGroup.children[4].userData.busy);
+    currentParkGroup.children[0].position.x--;
+    if (maximizingPlayer) {
+        //console.log("hiii111");
+        for (let i = 0; i < cylsG1CurrentState.length; i++) {
+            // console.log("hiii222");
+            if (!cylsG1CurrentState[i].userData.onBoard) {
+                //console.log("hiii3333");
+                for (let j = 0; j < currentParkGroup.children.length; j++) {
+                    ///console.log("hiii4444");
+                    // let currentParkGroup2 = node[0];
+                    // let cylsG1CurrentState2 = node[1];
+                    // let cylsG2CurrentState2 = node[2];
+                    // let newNode=[];
+                    // currentParkGroup2.children[j].userData.busy = true;
+                    // cylsG1CurrentState2[i].userData.onBoard = true;
+                    // cylsG1CurrentState2[i].position.x = currentParkGroup2.children[j].position.x
+                    // cylsG1CurrentState2[i].position.z = currentParkGroup2.children[j].position.z
+                    // cylsG1CurrentState2[i].position.y = currentParkGroup2.children[j].position.y + 0.1
+                    // newNode.push(currentParkGroup2);
+                    // newNode.push(cylsG1CurrentState2);
+                    // newNode.push(cylsG2CurrentState2);
+                    // childrenNodes.push(newNode);
+                    // console.log("G1 pos z first element" + cylsG1CurrentState2[i].position.z);
+                    // console.log("G1 pos x first element" + cylsG1CurrentState2[i].position.x);
+                    // console.log("hiii");
+                }
+            }
+        }
+    }
+    return childrenNodes;
+}
+
+function typeAi(type) {
+
+}
+
+function alpahBeta(node, depth, alpha, beta, maximizingPlayer) {
+    if (depth == 0) {
+        return //Node of Heurisic 
+    }
+
+    getNextStates(node, true);
+    // if (maximizingPlayer) {
+    //     let v = Number.NEGATIVE_INFINITY;
+    //     let children = getNextStates(node, true);
+    //     for (let i = 0; i < children.length; i++) {
+    //         v = max(v, alpahBeta(children[i], depth - 1, alpha, beta, false))
+    //         alpha = max(beta, alpha)
+    //         if (beta <= alpha)
+    //             break
+    //         //CUT OFF
+    //         return v;
+    //     }
+
+    // }
+    // else {
+    //     let v = Number.POSITIVE_INFINITY;
+    //     let children = getNextStates(node, false);
+    //     for (let i = 0; i < children.length; i++) {
+
+    //         v = min(v, alpahBeta(node, depth - 1, alpha, beta, true))
+    //         beta = min(beta, alpha)
+    //         if (beta <= alpha)
+    //             break
+    //         //CUT OFF
+    //         return v;
+
+    //     }
+    // }
+}
+function twoPacesInSameLine() { }
 window.addEventListener("resize", onWindowResize);
 window.addEventListener('mousemove', onMouseMove, false);
 window.addEventListener("click", onClick);
