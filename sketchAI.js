@@ -1,8 +1,16 @@
 
 var camera, scene, renderer, mouse, raycaster, controls, selectedPice = null, wayGroup, cube, parkGroup, standGroup1, standGroup2;
-var numPiscesOnstands = 6, currentPlayer = 1, remianOnStand = true;
-var cylindersGroup1 = [], cylindersGroup2 = [];
-var playWithAI = true, numOfCylOnStandForAI = 2;
+var numPiscesOnstands = 3, currentPlayer = 1, remianOnStand = true;
+var cylindersGroup1, cylindersGroup2;
+var playWithAI = true, numOfCylOnStandForAI = 3, counter = 0;
+var bestMoveIndex = -1;
+class stateNode {
+
+    constructor(node, value) {
+        this.node = node;
+        this.value = value;
+    }
+}
 function init() {
 
     ///implement your functionality here in this fill please 
@@ -22,7 +30,7 @@ function init() {
     //var cube = new THREE.Mesh(geometry,material);
     /////////////////
 
-    var cylGeometry = new THREE.CylinderGeometry(0.3, 0.4, 0.3, 100, 1, false, 400, 32);
+    var cylGeometry = new THREE.CylinderGeometry(0.3, 0.4, 0.3, 100, 1, false, 400, 6.3);
 
     //var cylinder = new THREE.Mesh(cylGeometry, material);
     //cylinder.position.set(8, 0.1, 4);
@@ -43,6 +51,8 @@ function init() {
     parkGroup = new THREE.Group();
     standGroup1 = new THREE.Group();
     standGroup2 = new THREE.Group();
+    cylindersGroup1 = new THREE.Group()
+    cylindersGroup2 = new THREE.Group()
 
     var cylinderNumber = 1;
     for (let i = 0; i < 9; i++) {
@@ -59,8 +69,8 @@ function init() {
             cylinder.userData.playerNumber = 1;
             cylinder.userData.onBoard = false;
             cylinder.userData.currentSquareNumber = 0;
-            scene.add(cylinder);
-            cylindersGroup1.push(cylinder);
+            // scene.add(cylinder);
+            cylindersGroup1.add(cylinder);
             cylinderNumber++;
         }
 
@@ -75,14 +85,16 @@ function init() {
             cylinder.userData.playerNumber = 2;
             cylinder.userData.onBoard = false;
             cylinder.userData.currentSquareNumber = 0;
-            scene.add(cylinder);
-            cylindersGroup2.push(cylinder);
+            // scene.add(cylinder);
+            cylindersGroup2.add(cylinder);
             cylinderNumber++;
         }
     }
-    console.log("")
+    console.log("cylinderNumber"+cylinderNumber)
     scene.add(standGroup1);
-    scene.add(standGroup2)
+    scene.add(standGroup2);
+    scene.add(cylindersGroup1);
+    scene.add(cylindersGroup2);
 
     let squareNumber = 1;
     for (let x = 0; x < 9; x++) {
@@ -137,11 +149,11 @@ function GameLoop() {
     renderer.render(scene, camera);
     window.requestAnimationFrame(GameLoop);
     if (playWithAI) {
-        if (currentPlayer == 1) {
+        if (currentPlayer == 2) {
             AIMove();
         }
     }
-    console.log(playWithAI);
+    // console.log(playWithAI);
 }
 function positionForSquare(square) {
     const found = parkGroup.children.find((child) => child.userData.squareNumber == square);
@@ -152,6 +164,13 @@ function positionForSquare(square) {
 }
 function getSquareUsingPosition(x, z) {
     const found = parkGroup.children.find((child) => (child.position.x == x && child.position.z == z));
+    if (found) {
+        return found;
+    }
+    return null;
+}
+function getCylinderUsingPosition(x, z) {
+    const found = cylindersGroup2.children.find((child) => (child.position.x == x && child.position.z == z));
     if (found) {
         return found;
     }
@@ -179,7 +198,7 @@ function onClick(event) {
     //console.log("hellooooooooo");
     // var togglePalyer=1 ;  
     raycaster.setFromCamera(mouse, camera);
-    let intersects = raycaster.intersectObjects(scene.children);
+    let intersects = raycaster.intersectObjects(cylindersGroup1.children);
 
     if (intersects.length > 0) {
         selectedPice = intersects[0].object.userData.cylinderNumber;
@@ -194,55 +213,57 @@ function onClick(event) {
 
         if (intersects.length > 0) {
             const targatSquare = intersects[0].object.userData.squareNumber;
-            const selectedObject = scene.children.find((child) => child.userData.cylinderNumber == selectedPice);
+            const selectedObject = cylindersGroup1.children.find((child) => child.userData.cylinderNumber == selectedPice);
             if (!targatSquare || !selectedObject) return;
             const targatPosition = positionForSquare(targatSquare);
             let playerNumber = selectedObject.userData.playerNumber;
             let isItOnBoard = selectedObject.userData.onBoard;
 
             // console.log("player num "+playerNumber)
-            // console.log("current Player"+currentPlayer)
+            // console.log("current Player " + currentPlayer)
+            // console.log("remianOnStand " + remianOnStand)
             let isBusy = intersects[0].object.userData.busy;
             if (playerNumber == currentPlayer && remianOnStand && (!isItOnBoard) && (!isBusy)) {
                 selectedObject.position.set(targatPosition.x, 0.1, targatPosition.z);
-                currentPlayer == 1 ? currentPlayer = 2 : currentPlayer = 1;
                 numPiscesOnstands--;
                 selectedObject.userData.onBoard = true;
                 selectedObject.userData.currentSquareNumber = getSquareUsingPosition(selectedObject.position.x, selectedObject.position.z).userData.squareNumber;
                 intersects[0].object.userData.busy = true;
+                setTimeout(()=>{currentPlayer == 1 ? currentPlayer = 2 : currentPlayer = 1;}, 2000);
                 if (numPiscesOnstands == 0) {
                     remianOnStand = false
-                }
-                if (numPiscesOnstands <= 3) {
-                    isplayer1Win = checkIfWin(cylindersGroup1)
-                    isplayer2Win = checkIfWin(cylindersGroup2)
+                    isplayer1Win = checkIfWin(cylindersGroup1, 1)
+                    isplayer2Win = checkIfWin(cylindersGroup2, 2)
                     if (isplayer1Win) {
-                        window.alert("player 1 wins ")
+                        window.alert("You win ")
                         location.reload();
                     }
                     else if (isplayer2Win) {
-                        window.alert("player 2 wins ")
+                        window.alert("AI win")
                         location.reload();
                     }
                 }
+
             }
             else if ((((selectedObject.position.x + selectedObject.position.z - 4) == (targatPosition.x + targatPosition.z))
                 || ((selectedObject.position.x + selectedObject.position.z + 4) == (targatPosition.x + targatPosition.z)))
                 && playerNumber == currentPlayer && (!remianOnStand) && (!isBusy)) {
-
+                console.log("remianOnStand " + remianOnStand)
                 getSquareUsingPosition(selectedObject.position.x, selectedObject.position.z).userData.busy = false;
                 selectedObject.position.set(targatPosition.x, 0.1, targatPosition.z);
                 getSquareUsingPosition(targatPosition.x, targatPosition.z).userData.busy = true;
-                currentPlayer == 1 ? currentPlayer = 2 : currentPlayer = 1;
+                
+                setTimeout(()=>{currentPlayer == 1 ? currentPlayer = 2 : currentPlayer = 1;}, 2000);
+                
 
-                isplayer1Win = checkIfWin(cylindersGroup1);
-                isplayer2Win = checkIfWin(cylindersGroup2);
+                isplayer1Win = checkIfWin(cylindersGroup1, 1);
+                isplayer2Win = checkIfWin(cylindersGroup2, 2);
                 if (isplayer1Win) {
-                    window.alert("player 1 wins")
+                    window.alert("You win ")
                     location.reload();
                 }
                 else if (isplayer2Win) {
-                    window.alert("player 2 wins ")
+                    window.alert("AI win")
                     location.reload();
                 }
             }
@@ -253,7 +274,7 @@ function onClick(event) {
 
 function hoverPices() {
     raycaster.setFromCamera(mouse, camera);
-    let intersects = raycaster.intersectObjects(scene.children);
+    let intersects = raycaster.intersectObjects(cylindersGroup1.children);
 
     for (let i = 0; i < intersects.length; i++) {
 
@@ -264,21 +285,30 @@ function hoverPices() {
     }
 }
 function resetMaterial() {
-    for (let i = 0; i < scene.children.length; i++) {
-        if (scene.children[i].material) {
-            scene.children[i].material.opacity = scene.children[i].userData.cylinderNumber == selectedPice ? 0.5 : 1.0;
+    for (let i = 0; i < cylindersGroup1.children.length; i++) {
+        if (cylindersGroup1.children[i].material) {
+            cylindersGroup1.children[i].material.opacity = cylindersGroup1.children[i].userData.cylinderNumber == selectedPice ? 0.5 : 1.0;
             // console.log("lask")
         }
     }
 }
 
-function checkIfWin(cylinderGroup) {
+function checkIfWin(cylinderGroup, groupNumber) {
     let isWinX = false;
     let isWinZ = false;
+    let cylinder1
+    let cylinder2
+    let cylinder3
+    if (groupNumber == 1) {
+        cylinder1 = cylinderGroup.children.find((child) => (child.userData.cylinderNumber == 1 && child.userData.playerNumber == groupNumber));
+        cylinder2 = cylinderGroup.children.find((child) => (child.userData.cylinderNumber == 2 && child.userData.playerNumber == groupNumber));
+        cylinder3 = cylinderGroup.children.find((child) => (child.userData.cylinderNumber == 3 && child.userData.playerNumber == groupNumber));
+    } else {
+        cylinder1 = cylinderGroup.children.find((child) => (child.userData.cylinderNumber == 4 && child.userData.playerNumber == groupNumber));
+        cylinder2 = cylinderGroup.children.find((child) => (child.userData.cylinderNumber == 5 && child.userData.playerNumber == groupNumber));
+        cylinder3 = cylinderGroup.children.find((child) => (child.userData.cylinderNumber == 6 && child.userData.playerNumber == groupNumber));
+    }
 
-    let cylinder1 = cylinderGroup[0];
-    let cylinder2 = cylinderGroup[1];
-    let cylinder3 = cylinderGroup[2];
     let cylinderPosition1 = cylinder1.position;
     let cylinderPosition2 = cylinder2.position;
     let cylinderPosition3 = cylinder3.position;
@@ -296,31 +326,96 @@ function isItAi(isItAi) {
     playWithAI = isItAi;
 }
 
+function getCurrentState() {
+
+    var currentStateArr = new Array(3);
+    for (let i = 0; i < 3; i++) {
+        currentStateArr[i] = new Array(3).fill("-")
+    }
+
+    for (let i = 1; i < 4; i++) {
+        let cylinder = cylindersGroup1.children.find((child) => child.userData.cylinderNumber == i);
+        let xIndexColumn = 0.25 * cylinder.position.x
+        let zIndexRow = 0.25 * cylinder.position.z
+        let yPosetion = cylinder.position.y
+        if (yPosetion == 0.1)
+            currentStateArr[zIndexRow][xIndexColumn] = "1";
+    }
+    for (let i = 4; i < 7; i++) {
+        let cylinder = cylindersGroup2.children.find((child) => child.userData.cylinderNumber == i);
+        let xIndexColumn = 0.25 * cylinder.position.x
+        let zIndexRow = 0.25 * cylinder.position.z
+        let yPosetion = cylinder.position.y
+        if (yPosetion == 0.1)
+            currentStateArr[zIndexRow][xIndexColumn] = "2"
+    }
+    console.log("currentStateArr"+currentStateArr);
+    return currentStateArr;
+}
+
 function AIMove() {
+    currentState = getCurrentState();
 
-    let node = [];
-    let clonedParkGroup = parkGroup.clone();
-    let clonedCylindersGroup1 = cylindersGroup1.slice(0);           ///cloning array 
-    let clonedCylindersGroup2 = cylindersGroup2.slice(0);
-    //console.log("x : " + clonedCylindersGroup2[1].position.x);
-    clonedCylindersGroup1[0].position.x--;
-    node.push(clonedParkGroup);
-    node.push(clonedCylindersGroup1);
-    node.push(clonedCylindersGroup2);
-    let bestMove = alpahBeta(node, 8, Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY, true);
-    console.log("Xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx    ");
+    let bestStateMove = alpahBeta(currentState, 5, -100, 100, true);
+    console.log("best move  sffaadwdwd;"+ bestStateMove.node)
+    bestMove = getNextStates(currentState,true)[bestMoveIndex];
+    console.log("best move  ;"+ bestMove)
+    let targetPosition = new Array(2);  //0 index = i = x axis , 1 index = j = z axis 
+    let currentPosition = new Array(2); //0 index = i = x axis , 1 index = j = z axis
+    for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+            if (currentState[i][j] == bestMove[i][j])
+                continue;
+            else if (currentState[i][j] == "-" && bestMove[i][j] == "2") {
+                targetPosition[0] = j * 4;
+                targetPosition[1] = i * 4;
+            }
+            else if (currentState[i][j] == "2" && bestMove[i][j] == "-" ) {
+                currentPosition[0] = j * 4;
+                currentPosition[1] = i * 4;
+            }
+        }
+    }
+    // console.log("x: "+currentPosition[0] + "z: "+currentPosition[0])
+    console.log("x:tar "+targetPosition[0] + "z: tar"+targetPosition[1])
 
-    // console.log("X" + targatSquare.position.x);
-    // console.log("Z" + targatSquare.position.z);
-    // console.log("y" + targatSquare.position.y);
+    if(numOfCylOnStandForAI >= 1){           // on stand 
+        cylinderNum = numOfCylOnStandForAI + 3;
+        // console.log("cylinderNum"+cylinderNum);
+        const found = cylindersGroup2.children.find((child) => child.userData.cylinderNumber == cylinderNum);
+        found.position.set(targetPosition[0], 0.1, targetPosition[1])
+        // getSquareUsingPosition(targetPosition[0], targetPosition[1]).userData.isBusy = true;
+    }
+    else if (numOfCylOnStandForAI < 1){
+        selectedCylinderByAI = getCylinderUsingPosition(currentPosition[0], currentPosition[1]);
+        selectedCylinderByAI.position.set(targetPosition[0], 0.1, targetPosition[1]);
+        getSquareUsingPosition(currentPosition[0], currentPosition[1]).userData.isBusy = false;
+    }
 
-    // cylindersGroup1[numOfCylOnStandForAI].position.x = targatSquare.position.x;
-    // cylindersGroup1[numOfCylOnStandForAI].position.z = targatSquare.position.z;
-    // cylindersGroup1[numOfCylOnStandForAI].position.y = targatSquare.position.y + 0.1;
-
-    // targatSquare.userData.busy = true;
-    currentPlayer = 2;
-
+    getSquareUsingPosition(targetPosition[0], targetPosition[1]).userData.isBusy = true;
+    console.log("Hiiiii")
+    numOfCylOnStandForAI--;
+    currentPlayer = 1;
+    
+    // if (counter == 0) {
+    //     let cylinder = cylindersGroup2.children.find((child) => child.userData.cylinderNumber == 4)
+    //     cylinder.position.set(0, 0.1, 0)
+    // }
+    // else if (counter == 1) {
+    //     let cylinder = cylindersGroup2.children.find((child) => child.userData.cylinderNumber == 5)
+    //     cylinder.position.set(8, 0.1, 8)
+    // }
+    // else if (counter == 2) {
+    //     let cylinder = cylindersGroup2.children.find((child) => child.userData.cylinderNumber == 6)
+    //     cylinder.position.set(4, 0.1, 8)
+    //     console.log(currentPlayer);
+    // }
+    // else if (counter == 3) {
+    //     let cylinder = cylindersGroup2.children.find((child) => child.userData.cylinderNumber == 4)
+    //     cylinder.position.set(4, 0.1, 0)
+    //     console.log(currentPlayer);
+    // }
+    // counter++;
 
     // if (checkIfWin(cylindersGroup1)) {
     //     window.alert('AI wins you');
@@ -336,87 +431,330 @@ function AIMove() {
 }
 // node = array of busy and not busy squares 
 //       ,cylinders {cylindersGroup1, cylindersGroup2}
-function getNextStates(node, maximizingPlayer) {
-    let childrenNodes = [];
-    let currentParkGroup = node[0];
-    let cylsG1CurrentState = node[1];
-    let cylsG2CurrentState = node[2];
-    cylsG1CurrentState[1].position.x = currentParkGroup.children[4].position.x
-    cylsG1CurrentState[1].position.z = currentParkGroup.children[4].position.z
-    cylsG1CurrentState[1].position.y = currentParkGroup.children[4].position.y + 0.1;
-    currentParkGroup.children[4].userData.busy = true ; 
-    console.log("is it busy" +currentParkGroup.children[4].userData.busy);
-    console.log("is it busy acual" +parkGroup.children[4].userData.busy);
-    currentParkGroup.children[0].position.x--;
-    if (maximizingPlayer) {
-        //console.log("hiii111");
-        for (let i = 0; i < cylsG1CurrentState.length; i++) {
-            // console.log("hiii222");
-            if (!cylsG1CurrentState[i].userData.onBoard) {
-                //console.log("hiii3333");
-                for (let j = 0; j < currentParkGroup.children.length; j++) {
-                    ///console.log("hiii4444");
-                    // let currentParkGroup2 = node[0];
-                    // let cylsG1CurrentState2 = node[1];
-                    // let cylsG2CurrentState2 = node[2];
-                    // let newNode=[];
-                    // currentParkGroup2.children[j].userData.busy = true;
-                    // cylsG1CurrentState2[i].userData.onBoard = true;
-                    // cylsG1CurrentState2[i].position.x = currentParkGroup2.children[j].position.x
-                    // cylsG1CurrentState2[i].position.z = currentParkGroup2.children[j].position.z
-                    // cylsG1CurrentState2[i].position.y = currentParkGroup2.children[j].position.y + 0.1
-                    // newNode.push(currentParkGroup2);
-                    // newNode.push(cylsG1CurrentState2);
-                    // newNode.push(cylsG2CurrentState2);
-                    // childrenNodes.push(newNode);
-                    // console.log("G1 pos z first element" + cylsG1CurrentState2[i].position.z);
-                    // console.log("G1 pos x first element" + cylsG1CurrentState2[i].position.x);
-                    // console.log("hiii");
+function getNextStates(currentState, maximizingPlayer) { // maximizingPlayer if true -> AI -> player 2
+
+    let nextStates = []
+    // var newState = new Array(3);
+    // for (let i = 0; i < 3; i++) {
+    //     newState[i] = new Array(3)
+    // }
+    // nextStates.push(newState)
+    let cylindersCount1 = 0;
+    let cylindersCount2 = 0;
+    for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+            if (currentState[i][j] == "1") {
+                cylindersCount1++;
+            }
+            else if (currentState[i][j] == "2") {
+                cylindersCount2++;
+            }
+        }
+    }
+
+    if (maximizingPlayer) {           // AI turn    
+        if (cylindersCount2 == 3) {
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+
+                    if (currentState[i][j] == "2") {
+                        if (i + 1 < 3 && currentState[i + 1][j] != "1" && currentState[i + 1][j] != "2" && currentState[i + 1][j] == "-") {
+                            let newState = myClone(currentState);
+                            newState[i + 1][j] = "2"
+                            newState[i][j] = "-"
+                            nextStates.push(newState);
+                        }
+                        if (i - 1 > -1 && currentState[i - 1][j] != "1" && currentState[i - 1][j] != "2" && currentState[i - 1][j] == "-") {
+                            let newState = myClone(currentState);
+                            newState[i - 1][j] = "2"
+                            newState[i][j] = "-"
+                            nextStates.push(newState);
+                        }
+                        if (j + 1 < 3 && currentState[i][j + 1] != "1" && currentState[i][j + 1] != "2" && currentState[i][j + 1] == "-") {
+                            let newState = myClone(currentState);
+                            newState[i][j + 1] = "2"
+                            newState[i][j] = "-"
+                            nextStates.push(newState);
+                        }
+                        if (j - 1 > -1 && currentState[i][j - 1] != "1" && currentState[i][j - 1] != "2" && currentState[i][j - 1] == "-") {
+                            let newState = myClone(currentState);
+                            newState[i][j - 1] = "2"
+                            newState[i][j] = "-"
+                            nextStates.push(newState);
+                        }
+                    }
+                }
+            }
+        }
+        else {              //less than 3 on board (has cylinders on stand)
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    if (currentState[i][j] == "-") {
+                        let newState = myClone(currentState);
+                        newState[i][j] = "2"
+                        nextStates.push(newState);
+                    }
                 }
             }
         }
     }
-    return childrenNodes;
+    else {              
+        console.log("human turn")             // human turn 
+        if (cylindersCount1 == 3) {
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    if (currentState[i][j] == "1") {
+                        if (i + 1 < 3 && currentState[i + 1][j] != "2" && currentState[i + 1][j] != "1" && currentState[i + 1][j] == "-") {
+                            let newState = myClone(currentState);
+                            newState[i + 1][j] = "1"
+                            newState[i][j] = "-"
+                            nextStates.push(newState);
+                        }
+                        if (i - 1 > -1 && currentState[i - 1][j] != "2" && currentState[i - 1][j] != "1" && currentState[i - 1][j] == "-") {
+                            let newState = myClone(currentState);
+                            newState[i - 1][j] = "1"
+                            newState[i][j] = "-"
+                            nextStates.push(newState);
+                        }
+                        if (j + 1 < 3 && currentState[i][j + 1] != "2" && currentState[i][j + 1] != "1" && currentState[i][j + 1] == "-") {
+                            let newState = myClone(currentState);
+                            newState[i][j + 1] = "1"
+                            newState[i][j] = "-"
+                            nextStates.push(newState);
+                        }
+                        if (j - 1 > -1 && currentState[i][j - 1] != "2" && currentState[i][j - 1] != "1" && currentState[i][j - 1] == "-") {
+                            let newState = myClone(currentState);
+                            newState[i][j - 1] = "1"
+                            newState[i][j] = "-"
+                            nextStates.push(newState);
+                        }
+                    }
+                }
+            }
+        }
+        else {              //less than 3 on board (has cylinders on stand)
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    if (currentState[i][j] == "-") {
+                        let newState = myClone(currentState);
+                        newState[i][j] = "1"
+                        nextStates.push(newState);
+                    }
+                }
+            }
+        }
+    }   
+    console.log(nextStates);
+    return nextStates;
+}
+
+function myClone(arr) {
+    let newArray = new Array(arr.length)
+    for (let i = 0; i < arr[0].length; i++) {
+        newArray[i] = new Array(arr[0].length)
+       // console.log("hi")
+    }
+    for (let i = 0; i < arr.length; i++) {
+        for (let j = 0; j < arr[i].length; j++) {
+            newArray[i][j] = arr[i][j]
+        }
+    }
+    return newArray
 }
 
 function typeAi(type) {
 
 }
+/*Blocked node*/
+function getNumberOfBlocked(node, playerNum) {
+    // console.log("getNumberOfBlocked "+node);
+    let numberOfBlockedCylinder = 0
+    let isItBlocked = new Array(3).fill(true);
+    let cylinderNum = 0;
+    for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+            if (node[i][j] == playerNum) {
+                //Bottom
+                if (i + 1 < 3 && node[i + 1][j] == "-") {
+                    isItBlocked[cylinderNum] = false;
+                }
+                //UP
+                else if (i - 1 > -1 && node[i - 1][j] == "-") {
+                    isItBlocked[cylinderNum] = false;
+                }
+                //Right
+                else if (j + 1 < 3 && node[i][j + 1] == "-") {
+                    isItBlocked[cylinderNum] = false;
+                }
+                //Left
+                else if (j - 1 > -1 && node[i][j + 1] == "-") {
+                    isItBlocked[cylinderNum] = false;
+                }
+                cylinderNum++;
+            }
+        }
+    }
+    for (let i = 0; i < 3; i++) {
+        if (isItBlocked[i])
+            numberOfBlockedCylinder++;
+    }
+    console.log("numberOfBlockedCylinder "+numberOfBlockedCylinder);
+    return numberOfBlockedCylinder;
+}
+/*Two nodes in same lines */
+function getNumberOfTwoCylindersInSameLine(node, playerNum) {
+    // console.log("getNumberOfTwoCylindersInSameLine "+ node);
+    let numberOfTwoCylindersInSameLine = 0;
+    for (let i = 0; i < 3; i++) {
+        if ((node[i][0] == playerNum || node[i][1] == playerNum) && (node[i][0] == node[i][1] || node[i][1] == node[i][2] || node[i][0] == node[i][2]))
+            numberOfTwoCylindersInSameLine++;
+    }
+    for (let i = 0; i < 3; i++) {
+        if ((node[0][i] == playerNum || node[1][i] == playerNum) && (node[i][0] == node[1][i] || node[1][i] == node[2][i] || node[0][i] == node[2][i]))
+            numberOfTwoCylindersInSameLine++;
+    }
+    console.log("numberOfTwoCylindersInSameLine "+numberOfTwoCylindersInSameLine);
+
+    return numberOfTwoCylindersInSameLine;
+}
+/*Disance between player's cylinders */
+function getDisanceBetweenPlayersCylinders(node, playerNum) {
+    // console.log("getDisanceBetweenPlayersCylinders "+ node);
+
+    var arrayIndicesCylinder = new Array(3);
+    var distance = 0;
+    for (let i = 0; i < 3; i++) {
+        arrayIndicesCylinder[i] = new Array(2)
+    }
+    let cylinderNum = 0
+    for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+            if (node[i][j] == playerNum) {
+                arrayIndicesCylinder[cylinderNum][0] = i;
+                arrayIndicesCylinder[cylinderNum][1] = j;
+                cylinderNum++;
+            }
+        }
+    }
+    distance += Math.abs(arrayIndicesCylinder[0][0] - arrayIndicesCylinder[1][0]) + Math.abs(arrayIndicesCylinder[0][1] - arrayIndicesCylinder[1][1]); //between 0 and 1 
+    distance += Math.abs(arrayIndicesCylinder[0][0] - arrayIndicesCylinder[2][0]) + Math.abs(arrayIndicesCylinder[0][1] - arrayIndicesCylinder[2][1]); //betwwen 0, 2 
+    distance += Math.abs(arrayIndicesCylinder[1][0] - arrayIndicesCylinder[2][0]) + Math.abs(arrayIndicesCylinder[1][1] - arrayIndicesCylinder[2][1]); // between 1, 2
+    // console.log("node "+node);
+    // console.log("plater  "+playerNum+"  distance "+distance);
+
+    return distance
+}
+function evaluateState(node, playerNum) {  // playerNum = "1" or "2"
+    //node[][]
+    /*Blocked node*/
+    numberOfBlocked = getNumberOfBlocked(node, playerNum);
+    /*Two nodes in same lines */
+    numberOfTwoCylindersInSameLine = getNumberOfTwoCylindersInSameLine(node, playerNum);
+    /*Disance between player's cylinders */
+    disanceBetweenPlayersCylinders = getDisanceBetweenPlayersCylinders(node, playerNum);
+    let evaluateTwoCylindersInSameLine = 0;
+    // numberOfTwoCylindersInSameLine == 1 ? 2 : -2 ;
+    if (numberOfTwoCylindersInSameLine == 0) {
+        evaluateTwoCylindersInSameLine = -2;
+    }
+    else if (numberOfTwoCylindersInSameLine == 1) {
+        evaluateTwoCylindersInSameLine = 2;
+    }
+    // else if (numberOfTwoCylindersInSameLine == 2) {
+    //     evaluateTwoCylindersInSameLine = -2;
+    // }
+    return (numberOfBlocked * -2) + evaluateTwoCylindersInSameLine + ((disanceBetweenPlayersCylinders * -1)+4)
+
+}
 
 function alpahBeta(node, depth, alpha, beta, maximizingPlayer) {
+
+    isTerminalnode = checkIfTerminal(node);
+    console.log("isTerminalnode "+isTerminalnode)
+    if (isTerminalnode){
+        if(maximizingPlayer){
+            console.log("im terminal ")
+            return new stateNode(node, 50);
+        }else return new stateNode(node, -50);
+    }
     if (depth == 0) {
-        return //Node of Heurisic 
+        //Node of Heurisic 
+        evaluatedStateForPlayer1 = evaluateState(node, "1");
+        evaluatedStateForPlayer2 = evaluateState(node, "2");
+        console.log(evaluatedStateForPlayer2 - evaluatedStateForPlayer1 )
+
+        return new stateNode(node, evaluatedStateForPlayer2 - evaluatedStateForPlayer1);
     }
 
-    getNextStates(node, true);
-    // if (maximizingPlayer) {
-    //     let v = Number.NEGATIVE_INFINITY;
-    //     let children = getNextStates(node, true);
-    //     for (let i = 0; i < children.length; i++) {
-    //         v = max(v, alpahBeta(children[i], depth - 1, alpha, beta, false))
-    //         alpha = max(beta, alpha)
-    //         if (beta <= alpha)
-    //             break
-    //         //CUT OFF
-    //         return v;
-    //     }
+    if (maximizingPlayer) {
+        var v = new stateNode(null, -100);
+        children = getNextStates(node, true);
+        for (let i = 0; i < children.length; i++) {
+            newStateNode = alpahBeta(children[i], depth - 1, alpha, beta, false)
+            // console.log("newStateNode node" + newStateNode.node)
+            // console.log("newStateNode value" + newStateNode.value)
+            // console.log("v value befor: " + v.value)
+            if(newStateNode.value > v.value){
+                bestMoveIndex = i;
+                v = newStateNode;
+            }
+                
+            // console.log("v value after " + v.value)
+            alpha = Math.max(v.value, alpha)
+            if (beta <= alpha)  
+                break
+            //CUT OFF
+            return v;
+        }
+    }
+    else {
+        var v = new stateNode(null,100);
+        children = getNextStates(node, false);
+        for (let i = 0; i < children.length; i++) {
+            console.log("hihiiihihhisa      dasdadasdadsah")
+            newStateNode = alpahBeta(children[i], depth - 1, alpha, beta, true)
+            if(newStateNode.value < v.value)
+                v = newStateNode
+            beta = Math.min(v.value, beta)
+            if (beta <= alpha)
+                break
+            //CUT OFF
+            return v;
 
-    // }
-    // else {
-    //     let v = Number.POSITIVE_INFINITY;
-    //     let children = getNextStates(node, false);
-    //     for (let i = 0; i < children.length; i++) {
-
-    //         v = min(v, alpahBeta(node, depth - 1, alpha, beta, true))
-    //         beta = min(beta, alpha)
-    //         if (beta <= alpha)
-    //             break
-    //         //CUT OFF
-    //         return v;
-
-    //     }
-    // }
+        }
+    }
 }
+function checkIfTerminal(node) {
+    let win1ByX = false
+    let win1ByY = false
+    let win2ByX = false
+    let win2ByY = false
+    for (let i = 0; i < 3; i++) {
+        if (node[i][0] == node[i][1] && node[i][0] == node[i][2] && node[i][1] == node[i][2] && node[i][2] == "1") {
+            win1ByX = true;
+            return win1ByX
+        }
+        if (node[i][0] == node[i][1] && node[i][0] == node[i][2] && node[i][1] == node[i][2] && node[i][2] == "2") {
+            win2ByX = true;
+            return win2ByX
+        }
+    }
+    for (let i = 0; i < 3; i++) {
+        if (node[0][i] == node[1][i] && node[0][i] == node[2][i] && node[1][i] == node[2][i] && node[2][i] == "1") {
+            win1ByY = true;
+            return win1ByY
+        }
+        if (node[0][i] == node[1][i] && node[0][i] == node[2][i] && node[1][i] == node[2][i] && node[2][i] == "2") {
+            win2ByY = true;
+            return win2ByY
+        }
+    }
+    return false;
+
+}
+
+
+
 function twoPacesInSameLine() { }
 window.addEventListener("resize", onWindowResize);
 window.addEventListener('mousemove', onMouseMove, false);
