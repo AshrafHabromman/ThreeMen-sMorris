@@ -1,27 +1,33 @@
-
+//General variables
+ /*Variables in camera and shapes*/
 var camera, scene, renderer, mouse, raycaster, controls, selectedPice = null, wayGroup, cube, parkGroup, standGroup1, standGroup2;
 var numPiscesOnstands = 6, currentPlayer = 1, remianOnStand = true;
 var cylindersGroup1 = [], cylindersGroup2 = [];
+//initialization camera & environment
 
 function init() {
 
     ///implement your functionality here in this fill please 
 
     scene = new THREE.Scene();
+        //Screen size is equal to the size of our environment
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
     renderer = new THREE.WebGLRenderer();
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
+    //Background color
 
     scene.background = new THREE.Color(0x1e555c);
 
     var geometry = new THREE.BoxGeometry(1, 0.1, 1);
+        /*Material places where piece can't  put it.*/
     var parkBoxMaterial = new THREE.MeshStandardMaterial({ color: 0xeba570, wireframe: false })
+        /*Material places where piece can  put it.*/
     var wayBoxMaterial = new THREE.MeshStandardMaterial({ color: 0xedb183, wireframe: false })
     //var cube = new THREE.Mesh(geometry,material);
     /////////////////
-
+    /*Material pieces */
     var cylGeometry = new THREE.CylinderGeometry(0.3, 0.4, 0.3, 100, 1, false, 400, 6.3);
 
     //var cylinder = new THREE.Mesh(cylGeometry, material);
@@ -34,9 +40,10 @@ function init() {
     // cylinderPlayer2.userData.cylinderNumber = 2;
     // scene.add(cylinder2);
 
+    //Give light to shapes
     var light = new THREE.PointLight(0xFFFFFF, 1.5, 70, 2);
     light.position.set(4, 10, 4);
-
+    //Add light to an environment
     scene.add(light);
     ///////////////
     wayGroup = new THREE.Group();
@@ -44,7 +51,10 @@ function init() {
     standGroup1 = new THREE.Group();
     standGroup2 = new THREE.Group();
 
-    var cylinderNumber = 1;
+    var cylinderNumber = 1;//Giving value to each piece to simplify access to it.
+    //The first three pieces belong to the first player (1,2,3).
+    //The last three pieces belong to the second player (4,6,7).
+
     for (let i = 0; i < 9; i++) {
         let cylinder;
         if (i == 1 || i == 2 || i == 3) {
@@ -89,6 +99,7 @@ function init() {
         for (let z = 0; z < 9; z++) {
             let cube;
             if (((x + z) % 4) == 0 && (x % 4 == 0) && (z % 4 == 0)) {
+                       /*Determine in the environment the places where the piece can put it.*/
                 cube = new THREE.Mesh(geometry, parkBoxMaterial);
                 cube.position.set(x, 0, z);
                 cube.userData.squareNumber = squareNumber;
@@ -97,6 +108,7 @@ function init() {
                 parkGroup.add(cube);
             }
             else if (((x == 1 || x == 2 || x == 3 || x == 5 || x == 6 || x == 7) && (z % 4 == 0)) || ((z == 1 || z == 2 || z == 3 || z == 5 || z == 6 || z == 7) && (x % 4 == 0))) {
+                          /*Determine in the environment the places where the piece can't put it.*/
                 cube = new THREE.Mesh(geometry, wayBoxMaterial);
                 cube.position.set(x, 0, z);
                 wayGroup.add(cube);
@@ -107,14 +119,16 @@ function init() {
 
 
     //console.log(squareNumber);
+
+    //Add the places to an environment 
     scene.add(wayGroup);
     scene.add(parkGroup);
-
+    //Camera position
     camera.position.z = 10;
     camera.position.x = 4;
     camera.position.y = 4;
 
-    ////controls 
+    ////Controls Camera
     controls = new THREE.OrbitControls(camera, renderer.domElement);
 
     controls.target.set(4, 0, 4);
@@ -145,6 +159,7 @@ function positionForSquare(square) {
     }
     return null;
 }
+/*Get position the places where the piece can put it.*/
 function getSquareUsingPosition(x, z) {
     const found = parkGroup.children.find((child) => (child.position.x == x && child.position.z == z));
     if (found) {
@@ -152,6 +167,7 @@ function getSquareUsingPosition(x, z) {
     }
     return null;
 }
+//Reshape the environment after resizing the screen.
 function onWindowResize() {
     var width = window.innerWidth;
     var height = window.innerHeight;
@@ -169,6 +185,7 @@ function onMouseMove(event) {
     mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
     //  console.log("hi i'm hereeeeeeee");
 }
+//When a mouse on click what has been put press on it and then based the decision.
 
 function onClick(event) {
     //console.log("hellooooooooo");
@@ -245,6 +262,7 @@ function onClick(event) {
         }
     }
 }
+//When hovering over the shape it changes transparent for the shape . 
 
 function hoverPices() {
     raycaster.setFromCamera(mouse, camera);
@@ -258,6 +276,7 @@ function hoverPices() {
 
     }
 }
+//After placing it in the right place a decision will be transparent will change to 1 .
 function resetMaterial() {
     for (let i = 0; i < scene.children.length; i++) {
         if (scene.children[i].material) {
@@ -266,7 +285,7 @@ function resetMaterial() {
         }
     }
 }
-
+//Check whether the players won or not
 function checkIfWin(cylinderGroup) {
     let isWinX = false;
     let isWinZ = false;
