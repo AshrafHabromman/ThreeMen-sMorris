@@ -445,6 +445,18 @@ function AIMove() {
     //     location.reload();
 
     // }
+    isplayer1Win = checkIfWin(cylindersGroup1, 1);
+    if (isplayer1Win) {
+        window.alert("You win ")
+        location.reload();
+    }
+
+    isplayer2Win = checkIfWin(cylindersGroup2, 2)
+ 
+    if (isplayer2Win) {
+      window.alert("AI win")
+      location.reload();
+  }
 
 }
 // node = array of busy and not busy squares 
