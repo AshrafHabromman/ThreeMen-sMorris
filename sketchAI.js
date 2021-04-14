@@ -1,10 +1,10 @@
 //General variables
- /*Variables in camera and shapes*/
+/*Variables in camera and shapes*/
 var camera, scene, renderer, mouse, raycaster, controls,/*The piece that is selected*/selectedPice = null, /*Places where piece can't  put it.*/wayGroup, cube, /*Places where piece can put it.*/parkGroup, /*The group of the pieces for the first player */standGroup1, /*The group of the pieces for the second player */standGroup2;
 var numPiscesOnstands = 3, /*Current turn for whom?  1 (Person) or  2 (AI)*/currentPlayer = 1,/*Are pieces left on the stand?*/ remianOnStand = true;
 var /*Create pieces for the first player*/cylindersGroup1, /*Create pieces for the second  player*/cylindersGroup2;
 var playWithAI = true, numOfCylOnStandForAI = 3, counter = 0;
-var bestMoveIndex = -1;
+var bestMoveIndex = -1, AIMode = "";
 //Create a stateNode inside the node and the value that it represents for evaluation function.
 class stateNode {
 
@@ -34,7 +34,7 @@ function init() {
     var wayBoxMaterial = new THREE.MeshStandardMaterial({ color: 0xedb183, wireframe: false })
     //var cube = new THREE.Mesh(geometry,material);
     /////////////////
-    
+
     /*Material pieces */
     var cylGeometry = new THREE.CylinderGeometry(0.3, 0.4, 0.3, 100, 1, false, 400, 6.3);
 
@@ -47,7 +47,7 @@ function init() {
     // cylinderPlayer2.position.set(4, 0.1, 4);
     // cylinderPlayer2.userData.cylinderNumber = 2;
     // scene.add(cylinder2);
-    
+
     //Give light to shapes
     var light = new THREE.PointLight(0xFFFFFF, 1.5, 70, 2);
     light.position.set(4, 10, 4);
@@ -119,7 +119,7 @@ function init() {
                 parkGroup.add(cube);
             }
             else if (((x == 1 || x == 2 || x == 3 || x == 5 || x == 6 || x == 7) && (z % 4 == 0)) || ((z == 1 || z == 2 || z == 3 || z == 5 || z == 6 || z == 7) && (x % 4 == 0))) {
-             /*Determine in the environment the places where the piece can't put it.*/
+                /*Determine in the environment the places where the piece can't put it.*/
                 cube = new THREE.Mesh(geometry, wayBoxMaterial);
                 cube.position.set(x, 0, z);
                 wayGroup.add(cube);
@@ -245,7 +245,7 @@ function onClick(event) {
                 selectedObject.userData.onBoard = true;
                 selectedObject.userData.currentSquareNumber = getSquareUsingPosition(selectedObject.position.x, selectedObject.position.z).userData.squareNumber;
                 intersects[0].object.userData.busy = true;
-                setTimeout(() => { currentPlayer == 1 ? currentPlayer = 2 : currentPlayer = 1; }, 2000);
+                setTimeout(() => { currentPlayer == 1 ? currentPlayer = 2 : currentPlayer = 1; }, 1000);
                 if (numPiscesOnstands == 0) {
                     remianOnStand = false
                     isplayer1Win = checkIfWin(cylindersGroup1, 1)
@@ -254,10 +254,10 @@ function onClick(event) {
                         window.alert("You win ")
                         location.reload();
                     }
-                    else if (isplayer2Win) {
-                        window.alert("AI win")
-                        location.reload();
-                    }
+                    // else if (isplayer2Win) {
+                    //     window.alert("AI win")
+                    //     location.reload();
+                    // }
                 }
 
             }
@@ -268,7 +268,7 @@ function onClick(event) {
                 selectedObject.position.set(targatPosition.x, 0.1, targatPosition.z);
                 getSquareUsingPosition(targatPosition.x, targatPosition.z).userData.busy = true;
 
-                setTimeout(() => { currentPlayer == 1 ? currentPlayer = 2 : currentPlayer = 1; }, 2000);
+                setTimeout(() => { currentPlayer == 1 ? currentPlayer = 2 : currentPlayer = 1; }, 1000);
 
 
                 isplayer1Win = checkIfWin(cylindersGroup1, 1);
@@ -277,10 +277,10 @@ function onClick(event) {
                     window.alert("You win ")
                     location.reload();
                 }
-                else if (isplayer2Win) {
-                    window.alert("AI win")
-                    location.reload();
-                }
+                // else if (isplayer2Win) {
+                //     window.alert("AI win")
+                //     location.reload();
+                // }
             }
             selectedPice = null;
         }
@@ -371,13 +371,14 @@ function getCurrentState() {
 //Here we are given the next movement of artificial intelligence
 function AIMove() {
     currentState = getCurrentState();
+    console.log("AIMode " + AIMode);
     // recursive(5);
     bestMoveIndex = -1;
     let bestStateMove = alpahBeta(currentState, 4, -1000, 1000, true);
-    console.log("bestMoveIndex  "+ bestMoveIndex)
+    // console.log("bestMoveIndex  "+ bestMoveIndex)
     bestMove = getNextStates(currentState, true)[bestMoveIndex];
-    console.log("getNextStates  ;")
-    console.log(getNextStates(currentState, true))
+    // console.log("getNextStates  ;")
+    // console.log(getNextStates(currentState, true))
     let targetPosition = new Array(2);  //0 index = i = z axis , 1 index = j = x axis 
     let currentPosition = new Array(2); //0 index = i = z axis , 1 index = j = x axis
     for (let i = 0; i < 3; i++) {
@@ -407,56 +408,27 @@ function AIMove() {
         selectedCylinderByAI.position.set(targetPosition[0], 0.1, targetPosition[1]);
         getSquareUsingPosition(currentPosition[0], currentPosition[1]).userData.busy = false;
     }
-    console.log("targetPosition[0]" + targetPosition[0]);
-    console.log("targetPosition[1]" + targetPosition[1]);
+    // console.log("targetPosition[0]" + targetPosition[0]);
+    // console.log("targetPosition[1]" + targetPosition[1]);
 
     getSquareUsingPosition(targetPosition[0], targetPosition[1]).userData.busy = true;
     numOfCylOnStandForAI--;
-    console.log("***********************************************")
+    // console.log("***********************************************")
+
     currentPlayer = 1;
 
-    // if (counter == 0) {
-    //     let cylinder = cylindersGroup2.children.find((child) => child.userData.cylinderNumber == 4)
-    //     cylinder.position.set(0, 0.1, 0)
-    // }
-    // else if (counter == 1) {
-    //     let cylinder = cylindersGroup2.children.find((child) => child.userData.cylinderNumber == 5)
-    //     cylinder.position.set(8, 0.1, 8)
-    // }
-    // else if (counter == 2) {
-    //     let cylinder = cylindersGroup2.children.find((child) => child.userData.cylinderNumber == 6)
-    //     cylinder.position.set(4, 0.1, 8)
-    //     console.log(currentPlayer);
-    // }
-    // else if (counter == 3) {
-    //     let cylinder = cylindersGroup2.children.find((child) => child.userData.cylinderNumber == 4)
-    //     cylinder.position.set(4, 0.1, 0)
-    //     console.log(currentPlayer);
-    // }
-    // counter++;
-
-    // if (checkIfWin(cylindersGroup1)) {
-    //     window.alert('AI wins you');
+    // isplayer1Win = checkIfWin(cylindersGroup1, 1);
+    // if (isplayer1Win) {
+    //     window.alert("You win ")
     //     location.reload();
-
     // }
-    // else if (checkIfWin(cylindersGroup12)) {
-    //     window.alert('you win');
-    //     location.reload();
-
-    // }
-    isplayer1Win = checkIfWin(cylindersGroup1, 1);
-    if (isplayer1Win) {
-        window.alert("You win ")
-        location.reload();
-    }
 
     isplayer2Win = checkIfWin(cylindersGroup2, 2)
- 
+
     if (isplayer2Win) {
-      window.alert("AI win")
-      location.reload();
-  }
+        window.alert("AI win")
+        setTimeout(() => {location.reload();}, 2000);
+    }
 
 }
 // node = array of busy and not busy squares 
@@ -594,8 +566,8 @@ function myClone(arr) {
     return newArray
 }
 
-function typeAi(type) {
-
+function setAIMode(mode) {
+    AIMode = mode;
 }
 /*Blocked node*/
 function getNumberOfBlocked(node, playerNum) {
@@ -682,9 +654,15 @@ function getDisanceBetweenPlayersCylinders(node, playerNum) {
 function evaluateState(node, playerNum) {  // playerNum = "1" or "2"
     //node[][]
     /*Blocked node*/
-    numberOfBlocked = getNumberOfBlocked(node, playerNum);
-    /*Two nodes in same lines */
-    numberOfTwoCylindersInSameLine = getNumberOfTwoCylindersInSameLine(node, playerNum);
+    var numberOfBlocked = 0;
+    var numberOfTwoCylindersInSameLine = 0;
+    if (AIMode == "hard" || AIMode == "easy") {
+        numberOfBlocked = getNumberOfBlocked(node, playerNum);
+        /*Two nodes in same lines */
+        numberOfTwoCylindersInSameLine = getNumberOfTwoCylindersInSameLine(node, playerNum);
+        // console.log("hiiiiiiii")
+    }
+
     /*Disance between player's cylinders */
     disanceBetweenPlayersCylinders = getDisanceBetweenPlayersCylinders(node, playerNum);
     let evaluateTwoCylindersInSameLine = 0;
@@ -698,8 +676,10 @@ function evaluateState(node, playerNum) {  // playerNum = "1" or "2"
     else if (numberOfTwoCylindersInSameLine == 2) {
         evaluateTwoCylindersInSameLine = -2;
     }
-    return (numberOfBlocked * -1) + evaluateTwoCylindersInSameLine + ((disanceBetweenPlayersCylinders * -1) + 4)
 
+    if (AIMode)
+
+        return (numberOfBlocked * -1) + evaluateTwoCylindersInSameLine + ((disanceBetweenPlayersCylinders * -1) + 4)
 }
 
 function alpahBeta(node, depth, alpha, beta, maximizingPlayer) {
@@ -708,13 +688,19 @@ function alpahBeta(node, depth, alpha, beta, maximizingPlayer) {
     // console.log("isTerminalnode "+isTerminalnode)
     if (isTerminalnode) {
         // console.log("**Terminal**")
-        console.log(node)
-        console.log("***********Terminal****************")
+        // console.log(node)
+        // console.log("***********Terminal****************")
+        var terminalValue = 0;
+        if (AIMode == "hard" || AIMode == "medium")
+            terminalValue = 100;
+        else if (AIMove == "easy")
+            terminalValue = 1;
+
         if (maximizingPlayer) {
             // console.log("im terminal ")
-            return new stateNode(node, -100);
-        } else return new stateNode(node, 100);
-    }   
+            return new stateNode(node, terminalValue * -1);
+        } else return new stateNode(node, terminalValue);
+    }
     if (depth == 0) {
         //Node of Heurisic 
         evaluatedStateForPlayer1 = evaluateState(node, "1");
@@ -729,9 +715,9 @@ function alpahBeta(node, depth, alpha, beta, maximizingPlayer) {
         for (var i = 0, childrenLength = children.length; i < childrenLength; i++) {
             var newStateNode = alpahBeta(children[i], depth - 1, alpha, beta, false)
             if (newStateNode.value > v.value) {
-                console.log(v.node);
+                // console.log(v.node);
                 v = newStateNode;
-                if(depth==4){
+                if (depth == 4) {
                     bestMoveIndex = i;
                 }
             }
@@ -788,19 +774,6 @@ function checkIfTerminal(node) {
     }
     return false;
 }
-
-function recursive(input) {
-    if (input == 0) {
-        return
-    }
-    for (var i = 0; i < 4; i++) {
-        console.log("i =" + i + "input = " + input);
-        recursive(input - 1);
-
-    }
-}
-
-
 
 function twoPacesInSameLine() { }
 window.addEventListener("resize", onWindowResize);
