@@ -90,7 +90,7 @@ function init() {
             cylinderNumber++;
         }
     }
-    console.log("cylinderNumber"+cylinderNumber)
+    // console.log("cylinderNumber"+cylinderNumber)
     scene.add(standGroup1);
     scene.add(standGroup2);
     scene.add(cylindersGroup1);
@@ -229,7 +229,7 @@ function onClick(event) {
                 selectedObject.userData.onBoard = true;
                 selectedObject.userData.currentSquareNumber = getSquareUsingPosition(selectedObject.position.x, selectedObject.position.z).userData.squareNumber;
                 intersects[0].object.userData.busy = true;
-                setTimeout(()=>{currentPlayer == 1 ? currentPlayer = 2 : currentPlayer = 1;}, 2000);
+                setTimeout(() => { currentPlayer == 1 ? currentPlayer = 2 : currentPlayer = 1; }, 2000);
                 if (numPiscesOnstands == 0) {
                     remianOnStand = false
                     isplayer1Win = checkIfWin(cylindersGroup1, 1)
@@ -248,13 +248,12 @@ function onClick(event) {
             else if ((((selectedObject.position.x + selectedObject.position.z - 4) == (targatPosition.x + targatPosition.z))
                 || ((selectedObject.position.x + selectedObject.position.z + 4) == (targatPosition.x + targatPosition.z)))
                 && playerNumber == currentPlayer && (!remianOnStand) && (!isBusy)) {
-                console.log("remianOnStand " + remianOnStand)
                 getSquareUsingPosition(selectedObject.position.x, selectedObject.position.z).userData.busy = false;
                 selectedObject.position.set(targatPosition.x, 0.1, targatPosition.z);
                 getSquareUsingPosition(targatPosition.x, targatPosition.z).userData.busy = true;
-                
-                setTimeout(()=>{currentPlayer == 1 ? currentPlayer = 2 : currentPlayer = 1;}, 2000);
-                
+
+                setTimeout(() => { currentPlayer == 1 ? currentPlayer = 2 : currentPlayer = 1; }, 2000);
+
 
                 isplayer1Win = checkIfWin(cylindersGroup1, 1);
                 isplayer2Win = checkIfWin(cylindersGroup2, 2);
@@ -349,19 +348,21 @@ function getCurrentState() {
         if (yPosetion == 0.1)
             currentStateArr[zIndexRow][xIndexColumn] = "2"
     }
-    console.log("currentStateArr"+currentStateArr);
+    // console.log("currentStateArr"+currentStateArr);
     return currentStateArr;
 }
 
 function AIMove() {
     currentState = getCurrentState();
-
-    let bestStateMove = alpahBeta(currentState, 5, -100, 100, true);
-    console.log("best move  sffaadwdwd;"+ bestStateMove.node)
-    bestMove = getNextStates(currentState,true)[bestMoveIndex];
-    console.log("best move  ;"+ bestMove)
-    let targetPosition = new Array(2);  //0 index = i = x axis , 1 index = j = z axis 
-    let currentPosition = new Array(2); //0 index = i = x axis , 1 index = j = z axis
+    // recursive(5);
+    bestMoveIndex = -1;
+    let bestStateMove = alpahBeta(currentState, 4, -1000, 1000, true);
+    console.log("bestMoveIndex  "+ bestMoveIndex)
+    bestMove = getNextStates(currentState, true)[bestMoveIndex];
+    console.log("getNextStates  ;")
+    console.log(getNextStates(currentState, true))
+    let targetPosition = new Array(2);  //0 index = i = z axis , 1 index = j = x axis 
+    let currentPosition = new Array(2); //0 index = i = z axis , 1 index = j = x axis
     for (let i = 0; i < 3; i++) {
         for (let j = 0; j < 3; j++) {
             if (currentState[i][j] == bestMove[i][j])
@@ -370,33 +371,33 @@ function AIMove() {
                 targetPosition[0] = j * 4;
                 targetPosition[1] = i * 4;
             }
-            else if (currentState[i][j] == "2" && bestMove[i][j] == "-" ) {
+            else if (currentState[i][j] == "2" && bestMove[i][j] == "-") {
                 currentPosition[0] = j * 4;
                 currentPosition[1] = i * 4;
             }
         }
     }
-    // console.log("x: "+currentPosition[0] + "z: "+currentPosition[0])
-    console.log("x:tar "+targetPosition[0] + "z: tar"+targetPosition[1])
 
-    if(numOfCylOnStandForAI >= 1){           // on stand 
+    if (numOfCylOnStandForAI >= 1) {           // on stand 
         cylinderNum = numOfCylOnStandForAI + 3;
         // console.log("cylinderNum"+cylinderNum);
         const found = cylindersGroup2.children.find((child) => child.userData.cylinderNumber == cylinderNum);
         found.position.set(targetPosition[0], 0.1, targetPosition[1])
         // getSquareUsingPosition(targetPosition[0], targetPosition[1]).userData.isBusy = true;
     }
-    else if (numOfCylOnStandForAI < 1){
-        selectedCylinderByAI = getCylinderUsingPosition(currentPosition[0], currentPosition[1]);
+    else if (numOfCylOnStandForAI < 1) {
+        selectedCylinderByAI = getCylinderUsingPosition(currentPosition[0], currentPosition[1]);    //take x, z 
         selectedCylinderByAI.position.set(targetPosition[0], 0.1, targetPosition[1]);
-        getSquareUsingPosition(currentPosition[0], currentPosition[1]).userData.isBusy = false;
+        getSquareUsingPosition(currentPosition[0], currentPosition[1]).userData.busy = false;
     }
+    console.log("targetPosition[0]" + targetPosition[0]);
+    console.log("targetPosition[1]" + targetPosition[1]);
 
-    getSquareUsingPosition(targetPosition[0], targetPosition[1]).userData.isBusy = true;
-    console.log("Hiiiii")
+    getSquareUsingPosition(targetPosition[0], targetPosition[1]).userData.busy = true;
     numOfCylOnStandForAI--;
+    console.log("***********************************************")
     currentPlayer = 1;
-    
+
     // if (counter == 0) {
     //     let cylinder = cylindersGroup2.children.find((child) => child.userData.cylinderNumber == 4)
     //     cylinder.position.set(0, 0.1, 0)
@@ -498,8 +499,8 @@ function getNextStates(currentState, maximizingPlayer) { // maximizingPlayer if 
             }
         }
     }
-    else {              
-        console.log("human turn")             // human turn 
+    else {
+        // .log("human turn")             // human turn 
         if (cylindersCount1 == 3) {
             for (let i = 0; i < 3; i++) {
                 for (let j = 0; j < 3; j++) {
@@ -543,8 +544,8 @@ function getNextStates(currentState, maximizingPlayer) { // maximizingPlayer if 
                 }
             }
         }
-    }   
-    console.log(nextStates);
+    }
+    // console.log(nextStates);
     return nextStates;
 }
 
@@ -552,7 +553,7 @@ function myClone(arr) {
     let newArray = new Array(arr.length)
     for (let i = 0; i < arr[0].length; i++) {
         newArray[i] = new Array(arr[0].length)
-       // console.log("hi")
+        // console.log("hi")
     }
     for (let i = 0; i < arr.length; i++) {
         for (let j = 0; j < arr[i].length; j++) {
@@ -598,7 +599,7 @@ function getNumberOfBlocked(node, playerNum) {
         if (isItBlocked[i])
             numberOfBlockedCylinder++;
     }
-    console.log("numberOfBlockedCylinder "+numberOfBlockedCylinder);
+    // console.log("numberOfBlockedCylinder "+numberOfBlockedCylinder);
     return numberOfBlockedCylinder;
 }
 /*Two nodes in same lines */
@@ -613,7 +614,7 @@ function getNumberOfTwoCylindersInSameLine(node, playerNum) {
         if ((node[0][i] == playerNum || node[1][i] == playerNum) && (node[i][0] == node[1][i] || node[1][i] == node[2][i] || node[0][i] == node[2][i]))
             numberOfTwoCylindersInSameLine++;
     }
-    console.log("numberOfTwoCylindersInSameLine "+numberOfTwoCylindersInSameLine);
+    // console.log("numberOfTwoCylindersInSameLine "+numberOfTwoCylindersInSameLine);
 
     return numberOfTwoCylindersInSameLine;
 }
@@ -639,7 +640,8 @@ function getDisanceBetweenPlayersCylinders(node, playerNum) {
     distance += Math.abs(arrayIndicesCylinder[0][0] - arrayIndicesCylinder[1][0]) + Math.abs(arrayIndicesCylinder[0][1] - arrayIndicesCylinder[1][1]); //between 0 and 1 
     distance += Math.abs(arrayIndicesCylinder[0][0] - arrayIndicesCylinder[2][0]) + Math.abs(arrayIndicesCylinder[0][1] - arrayIndicesCylinder[2][1]); //betwwen 0, 2 
     distance += Math.abs(arrayIndicesCylinder[1][0] - arrayIndicesCylinder[2][0]) + Math.abs(arrayIndicesCylinder[1][1] - arrayIndicesCylinder[2][1]); // between 1, 2
-    // console.log("node "+node);
+    // console.log ("node ");
+    // console.log(node);
     // console.log("plater  "+playerNum+"  distance "+distance);
 
     return distance
@@ -660,68 +662,68 @@ function evaluateState(node, playerNum) {  // playerNum = "1" or "2"
     else if (numberOfTwoCylindersInSameLine == 1) {
         evaluateTwoCylindersInSameLine = 2;
     }
-    // else if (numberOfTwoCylindersInSameLine == 2) {
-    //     evaluateTwoCylindersInSameLine = -2;
-    // }
-    return (numberOfBlocked * -2) + evaluateTwoCylindersInSameLine + ((disanceBetweenPlayersCylinders * -1)+4)
+    else if (numberOfTwoCylindersInSameLine == 2) {
+        evaluateTwoCylindersInSameLine = -2;
+    }
+    return (numberOfBlocked * -1) + evaluateTwoCylindersInSameLine + ((disanceBetweenPlayersCylinders * -1) + 4)
 
 }
 
 function alpahBeta(node, depth, alpha, beta, maximizingPlayer) {
 
     isTerminalnode = checkIfTerminal(node);
-    console.log("isTerminalnode "+isTerminalnode)
-    if (isTerminalnode){
-        if(maximizingPlayer){
-            console.log("im terminal ")
-            return new stateNode(node, 50);
-        }else return new stateNode(node, -50);
-    }
+    // console.log("isTerminalnode "+isTerminalnode)
+    if (isTerminalnode) {
+        // console.log("**Terminal**")
+        console.log(node)
+        console.log("***********Terminal****************")
+        if (maximizingPlayer) {
+            // console.log("im terminal ")
+            return new stateNode(node, -100);
+        } else return new stateNode(node, 100);
+    }   
     if (depth == 0) {
         //Node of Heurisic 
         evaluatedStateForPlayer1 = evaluateState(node, "1");
         evaluatedStateForPlayer2 = evaluateState(node, "2");
-        console.log(evaluatedStateForPlayer2 - evaluatedStateForPlayer1 )
-
+        // console.log(evaluatedStateForPlayer2 - evaluatedStateForPlayer1 )
         return new stateNode(node, evaluatedStateForPlayer2 - evaluatedStateForPlayer1);
     }
 
     if (maximizingPlayer) {
-        var v = new stateNode(null, -100);
-        children = getNextStates(node, true);
-        for (let i = 0; i < children.length; i++) {
-            newStateNode = alpahBeta(children[i], depth - 1, alpha, beta, false)
-            // console.log("newStateNode node" + newStateNode.node)
-            // console.log("newStateNode value" + newStateNode.value)
-            // console.log("v value befor: " + v.value)
-            if(newStateNode.value > v.value){
-                bestMoveIndex = i;
+        var v = new stateNode(null, -1000);
+        var children = getNextStates(node, true);
+        for (var i = 0, childrenLength = children.length; i < childrenLength; i++) {
+            var newStateNode = alpahBeta(children[i], depth - 1, alpha, beta, false)
+            if (newStateNode.value > v.value) {
+                console.log(v.node);
                 v = newStateNode;
+                if(depth==4){
+                    bestMoveIndex = i;
+                }
             }
-                
-            // console.log("v value after " + v.value)
             alpha = Math.max(v.value, alpha)
-            if (beta <= alpha)  
+            if (beta <= alpha)
                 break
             //CUT OFF
-            return v;
         }
+        return v;
     }
     else {
-        var v = new stateNode(null,100);
-        children = getNextStates(node, false);
-        for (let i = 0; i < children.length; i++) {
-            console.log("hihiiihihhisa      dasdadasdadsah")
-            newStateNode = alpahBeta(children[i], depth - 1, alpha, beta, true)
-            if(newStateNode.value < v.value)
+        //   console.log("depth "+depth)
+        var v = new stateNode(null, 1000);
+        var children = getNextStates(node, false);
+
+        for (var j = 0, childrenLength = children.length; j < childrenLength; j++) {
+            var newStateNode = alpahBeta(children[j], depth - 1, alpha, beta, true)
+            if (newStateNode.value < v.value)
                 v = newStateNode
             beta = Math.min(v.value, beta)
             if (beta <= alpha)
                 break
             //CUT OFF
-            return v;
-
         }
+        return v;
     }
 }
 function checkIfTerminal(node) {
@@ -750,7 +752,17 @@ function checkIfTerminal(node) {
         }
     }
     return false;
+}
 
+function recursive(input) {
+    if (input == 0) {
+        return
+    }
+    for (var i = 0; i < 4; i++) {
+        console.log("i =" + i + "input = " + input);
+        recursive(input - 1);
+
+    }
 }
 
 
