@@ -17,7 +17,6 @@ class stateNode {
 function init() {
 
     ///implement your functionality here in this fill please 
-
     scene = new THREE.Scene();
     //Screen size is equal to the size of our environment
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -26,12 +25,12 @@ function init() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
     //Background color
-    scene.background = new THREE.Color(0x1e555c);
+    scene.background = new THREE.Color(0x161a1d);
     var geometry = new THREE.BoxGeometry(1, 0.1, 1);
     /*Material places where piece can't  put it.*/
-    var parkBoxMaterial = new THREE.MeshStandardMaterial({ color: 0xeba570, wireframe: false })
+    var parkBoxMaterial = new THREE.MeshStandardMaterial({ color: 0x2B343B, wireframe: false })
     /*Material places where piece can  put it.*/
-    var wayBoxMaterial = new THREE.MeshStandardMaterial({ color: 0xedb183, wireframe: false })
+    var wayBoxMaterial = new THREE.MeshStandardMaterial({ color: 0x3D4851, wireframe: false })
     //var cube = new THREE.Mesh(geometry,material);
     /////////////////
 
@@ -48,7 +47,7 @@ function init() {
     // cylinderPlayer2.userData.cylinderNumber = 2;
     // scene.add(cylinder2);
 
-    //Give light to shapes
+    //Give light to shapess     
     var light = new THREE.PointLight(0xFFFFFF, 1.5, 70, 2);
     light.position.set(4, 10, 4);
     //Add light to an environment
@@ -71,7 +70,7 @@ function init() {
             cube.position.set(-1, 1, i);
             standGroup1.add(cube);
 
-            var materialPlayer1 = new THREE.MeshStandardMaterial({ color: 0xf15152 });
+            var materialPlayer1 = new THREE.MeshStandardMaterial({ color: 0x660708 });
             cylinder = new THREE.Mesh(cylGeometry, materialPlayer1);
             cylinder.position.set(-1, 1.1, i);
             cylinder.userData.cylinderNumber = cylinderNumber;
@@ -87,7 +86,7 @@ function init() {
             cube = new THREE.Mesh(geometry, parkBoxMaterial);
             cube.position.set(-1, 1, i);
             standGroup2.add(cube);
-            var materialPlayer2 = new THREE.MeshStandardMaterial({ color: 0x3a2e39 });
+            var materialPlayer2 = new THREE.MeshStandardMaterial({ color: 0x0b090a });
             cylinder = new THREE.Mesh(cylGeometry, materialPlayer2);
             cylinder.position.set(-1, 1.1, i);
             cylinder.userData.cylinderNumber = cylinderNumber;
@@ -162,7 +161,7 @@ function GameLoop() {
     renderer.render(scene, camera);
     window.requestAnimationFrame(GameLoop);
     if (playWithAI) {
-        if (currentPlayer == 2) {
+        if (currentPlayer == 2) {       // in current player = 2 so its AI turn 
             AIMove();
         }
     }
@@ -198,11 +197,9 @@ function onWindowResize() {
     renderer.setSize(width, height);
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
-
 }
 
 function onMouseMove(event) {
-
     // calculate mouse position in normalized device coordinates
     // (-1 to +1) for both components
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
@@ -269,7 +266,6 @@ function onClick(event) {
                 getSquareUsingPosition(targatPosition.x, targatPosition.z).userData.busy = true;
 
                 setTimeout(() => { currentPlayer == 1 ? currentPlayer = 2 : currentPlayer = 1; }, 1000);
-
 
                 isplayer1Win = checkIfWin(cylindersGroup1, 1);
                 isplayer2Win = checkIfWin(cylindersGroup2, 2);
@@ -462,25 +458,25 @@ function getNextStates(currentState, maximizingPlayer) { // maximizingPlayer if 
                 for (let j = 0; j < 3; j++) {
 
                     if (currentState[i][j] == "2") {
-                        if (i + 1 < 3 && currentState[i + 1][j] != "1" && currentState[i + 1][j] != "2" && currentState[i + 1][j] == "-") {
+                        if (i + 1 < 3 /*&& currentState[i + 1][j] != "1" && currentState[i + 1][j] != "2"*/ && currentState[i + 1][j] == "-") {
                             let newState = myClone(currentState);
                             newState[i + 1][j] = "2"
                             newState[i][j] = "-"
                             nextStates.push(newState);
                         }
-                        if (i - 1 > -1 && currentState[i - 1][j] != "1" && currentState[i - 1][j] != "2" && currentState[i - 1][j] == "-") {
+                        if (i - 1 > -1 /*&& currentState[i - 1][j] != "1" && currentState[i - 1][j] != "2"*/ && currentState[i - 1][j] == "-") {
                             let newState = myClone(currentState);
                             newState[i - 1][j] = "2"
                             newState[i][j] = "-"
                             nextStates.push(newState);
                         }
-                        if (j + 1 < 3 && currentState[i][j + 1] != "1" && currentState[i][j + 1] != "2" && currentState[i][j + 1] == "-") {
+                        if (j + 1 < 3 /*&& currentState[i][j + 1] != "1" && currentState[i][j + 1] != "2"*/ && currentState[i][j + 1] == "-") {
                             let newState = myClone(currentState);
                             newState[i][j + 1] = "2"
                             newState[i][j] = "-"
                             nextStates.push(newState);
                         }
-                        if (j - 1 > -1 && currentState[i][j - 1] != "1" && currentState[i][j - 1] != "2" && currentState[i][j - 1] == "-") {
+                        if (j - 1 > -1 /*&& currentState[i][j - 1] != "1" && currentState[i][j - 1] != "2"*/ && currentState[i][j - 1] == "-") {
                             let newState = myClone(currentState);
                             newState[i][j - 1] = "2"
                             newState[i][j] = "-"
@@ -508,25 +504,25 @@ function getNextStates(currentState, maximizingPlayer) { // maximizingPlayer if 
             for (let i = 0; i < 3; i++) {
                 for (let j = 0; j < 3; j++) {
                     if (currentState[i][j] == "1") {
-                        if (i + 1 < 3 && currentState[i + 1][j] != "2" && currentState[i + 1][j] != "1" && currentState[i + 1][j] == "-") {
+                        if (i + 1 < 3 /*&& currentState[i + 1][j] != "2" && currentState[i + 1][j] != "1"*/ && currentState[i + 1][j] == "-") {
                             let newState = myClone(currentState);
                             newState[i + 1][j] = "1"
                             newState[i][j] = "-"
                             nextStates.push(newState);
                         }
-                        if (i - 1 > -1 && currentState[i - 1][j] != "2" && currentState[i - 1][j] != "1" && currentState[i - 1][j] == "-") {
+                        if (i - 1 > -1 /*&& currentState[i - 1][j] != "2" && currentState[i - 1][j] != "1"*/ && currentState[i - 1][j] == "-") {
                             let newState = myClone(currentState);
                             newState[i - 1][j] = "1"
                             newState[i][j] = "-"
                             nextStates.push(newState);
                         }
-                        if (j + 1 < 3 && currentState[i][j + 1] != "2" && currentState[i][j + 1] != "1" && currentState[i][j + 1] == "-") {
+                        if (j + 1 < 3 /*&& currentState[i][j + 1] != "2" && currentState[i][j + 1] != "1"*/ && currentState[i][j + 1] == "-") {
                             let newState = myClone(currentState);
                             newState[i][j + 1] = "1"
                             newState[i][j] = "-"
                             nextStates.push(newState);
                         }
-                        if (j - 1 > -1 && currentState[i][j - 1] != "2" && currentState[i][j - 1] != "1" && currentState[i][j - 1] == "-") {
+                        if (j - 1 > -1 /*&& currentState[i][j - 1] != "2" && currentState[i][j - 1] != "1"*/ && currentState[i][j - 1] == "-") {
                             let newState = myClone(currentState);
                             newState[i][j - 1] = "1"
                             newState[i][j] = "-"
@@ -699,7 +695,8 @@ function alpahBeta(node, depth, alpha, beta, maximizingPlayer) {
         if (maximizingPlayer) {
             // console.log("im terminal ")
             return new stateNode(node, terminalValue * -1);
-        } else return new stateNode(node, terminalValue);
+        } 
+        else return new stateNode(node, terminalValue);
     }
     if (depth == 0) {
         //Node of Heurisic 
