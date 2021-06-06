@@ -18,13 +18,13 @@ function init() {
     document.body.appendChild(renderer.domElement);
     //Background color
 
-    scene.background = new THREE.Color(0x1e555c);
+    scene.background = new THREE.Color(0x161a1d);
 
     var geometry = new THREE.BoxGeometry(1, 0.1, 1);
         /*Material places where piece can't  put it.*/
-    var parkBoxMaterial = new THREE.MeshStandardMaterial({ color: 0xeba570, wireframe: false })
+    var parkBoxMaterial = new THREE.MeshStandardMaterial({ color: 0x2B343B, wireframe: false })
         /*Material places where piece can  put it.*/
-    var wayBoxMaterial = new THREE.MeshStandardMaterial({ color: 0xedb183, wireframe: false })
+    var wayBoxMaterial = new THREE.MeshStandardMaterial({ color: 0x3D4851, wireframe: false })
     //var cube = new THREE.Mesh(geometry,material);
     /////////////////
     /*Material pieces */
@@ -62,7 +62,7 @@ function init() {
             cube.position.set(-1, 1, i);
             standGroup1.add(cube);
 
-            var materialPlayer1 = new THREE.MeshStandardMaterial({ color: 0xf15152 });
+            var materialPlayer1 = new THREE.MeshStandardMaterial({ color: 0x660708 });
             cylinder = new THREE.Mesh(cylGeometry, materialPlayer1);
             cylinder.position.set(-1, 1.1, i);
             cylinder.userData.cylinderNumber = cylinderNumber;
@@ -78,7 +78,7 @@ function init() {
             cube = new THREE.Mesh(geometry, parkBoxMaterial);
             cube.position.set(-1, 1, i);
             standGroup2.add(cube);
-            var materialPlayer2 = new THREE.MeshStandardMaterial({ color: 0x3a2e39 });
+            var materialPlayer2 = new THREE.MeshStandardMaterial({ color: 0x0b090a });
             cylinder = new THREE.Mesh(cylGeometry, materialPlayer2);
             cylinder.position.set(-1, 1.1, i);
             cylinder.userData.cylinderNumber = cylinderNumber;
